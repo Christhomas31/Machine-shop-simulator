@@ -3,21 +3,21 @@ package applications;
 public class EventList {
 	// data members
 	private int[] finishTime; // finish time array
-
+	private int numMachines;
+	private final int largeTime = Integer.MAX_VALUE;
+	
     // constructor
-    public EventList(int theNumMachines, int theLargeTime) {// initialize
-                                                             // finish
-                                                             // times for
-                                                             // m
-                                                             // machines
+    public EventList(int theNumMachines) {
         if (theNumMachines < 1)
             throw new IllegalArgumentException("number of machines must be >= 1");
         finishTime = new int[theNumMachines + 1];
 
         // all machines are idle, initialize with
         // large finish time
-        for (int i = 1; i <= theNumMachines; i++)
-            finishTime[i] = theLargeTime;
+        for (int i = 1; i <= theNumMachines; i++){
+            finishTime[i] = largeTime;
+        }
+        numMachines = theNumMachines;
     }
 
     /** @return machine for next event */
@@ -38,7 +38,15 @@ public class EventList {
         return finishTime[theMachine];
     }
 
-    public void setFinishTime(int theMachine, int theTime) {
-        finishTime[theMachine] = theTime;
+    public void setFinishTime(int theMachine) {
+        finishTime[theMachine] = largeTime;
     }
+    
+    public void setFinishTime(int theMachine, int time) {
+        finishTime[theMachine] = time;
+    }
+
+	public boolean isIdle(int p) {
+		return nextEventTime(p) == largeTime;
+	}
 }

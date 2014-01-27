@@ -22,7 +22,6 @@ public class MachineShopSimulator {
     private static int numJobs; // number of jobs
     private static EventList eList; // pointer to event list
     private static Machine[] machine; // array of machines
-    private static int largeTime; // all machines finish before this
 
     // methods
     /**
@@ -43,7 +42,7 @@ public class MachineShopSimulator {
             machine[p].getJobQ().put(theJob);
             theJob.setArrivalTime(timeNow);
             // if p idle, schedule immediately
-            if (eList.nextEventTime(p) == largeTime) {// machine is idle
+            if (eList.isIdle(p)) {// machine is idle
                 changeState(p);
             }
             return true;
@@ -63,7 +62,7 @@ public class MachineShopSimulator {
             lastJob = null;
             // wait over, ready for new job
             if (machine[theMachine].getJobQ().isEmpty()) // no waiting job
-                eList.setFinishTime(theMachine, largeTime);
+                eList.setFinishTime(theMachine);
             else {// take job off the queue and work on it
                 machine[theMachine].setActiveJob( (Job) machine[theMachine].getJobQ()
                         .remove());
@@ -96,44 +95,22 @@ public class MachineShopSimulator {
             throw new MyInputException(NUMBER_OF_MACHINES_AND_JOBS_MUST_BE_AT_LEAST_1);
 
         // create event and machine queues
-        eList = new EventList(numMachines, largeTime);
+        eList = new EventList(numMachines);
         machine = new Machine[numMachines + 1];
-        for (int i = 1; i <= numMachines; i++)
-            machine[i] = new Machine();
-
-        // input the change-over times
+        
         System.out.println("Enter change-over times for machines");
-        for (int j = 1; j <= numMachines; j++) {
-            int ct = keyboard.readInteger();
-            if (ct < 0)
-                throw new MyInputException(CHANGE_OVER_TIME_MUST_BE_AT_LEAST_0);
-            machine[j].setChangeTime(ct);
+        for (int i = 1; i <= numMachines; i++){
+            machine[i] = new Machine();
+            machine[i].setChangeTime(keyboard.readInteger());
         }
-
+       
         // input the jobs
         Job theJob;
         for (int i = 1; i <= numJobs; i++) {
-            System.out.println("Enter number of tasks for job " + i);
-            int tasks = keyboard.readInteger(); // number of tasks
-            int firstMachine = 0; // machine for first task
-            if (tasks < 1)
-                throw new MyInputException(EACH_JOB_MUST_HAVE_AT_LEAST_1_TASK);
-
-            // create the job
-            theJob = new Job(i);
+            theJob = new Job(i, keyboard);
             System.out.println("Enter the tasks (machine, time)"
                     + " in process order");
-            for (int j = 1; j <= tasks; j++) {// get tasks for job i
-                int theMachine = keyboard.readInteger();
-                int theTaskTime = keyboard.readInteger();
-                if (theMachine < 1 || theMachine > numMachines
-                        || theTaskTime < 1)
-                    throw new MyInputException(BAD_MACHINE_NUMBER_OR_TASK_TIME);
-                if (j == 1)
-                    firstMachine = theMachine; // job's first machine
-                theJob.addTask(theMachine, theTaskTime); // add to
-            } // task queue
-            machine[firstMachine].getJobQ().put(theJob);
+            theJob.setTasks(keyboard, numMachines, machine);
         }
     }
 
@@ -142,7 +119,6 @@ public class MachineShopSimulator {
         for (int p = 1; p <= numMachines; p++)
             changeState(p);
     }
-
     /** process all jobs to completion */
     static void simulate() {
         while (numJobs > 0) {// at least one job left
@@ -167,7 +143,6 @@ public class MachineShopSimulator {
 
     /** entry point for machine shop simulator */
     public static void main(String[] args) {
-        largeTime = Integer.MAX_VALUE;
         /*
          * It's vital that we (re)set this to 0 because if the simulator is called
          * multiple times (as happens in the acceptance tests), because timeNow
