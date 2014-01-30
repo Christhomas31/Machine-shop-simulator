@@ -3,7 +3,6 @@ package applications;
 public class EventList {
 	// data members
 	private int[] finishTime; // finish time array
-	private int numMachines;
 	private final int largeTime = Integer.MAX_VALUE;
 	
     // constructor
@@ -17,7 +16,6 @@ public class EventList {
         for (int i = 1; i <= theNumMachines; i++){
             finishTime[i] = largeTime;
         }
-        numMachines = theNumMachines;
     }
 
     /** @return machine for next event */
@@ -34,8 +32,8 @@ public class EventList {
         return p;
     }
 
-    public int nextEventTime(int theMachine) {
-        return finishTime[theMachine];
+    public int nextEventTime(int machineIndex) {
+        return finishTime[machineIndex];
     }
 
     public void setFinishTime(int theMachine) {
