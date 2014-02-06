@@ -62,14 +62,14 @@ public class Job {
 
 	public void setTasks(MyInputStream keyboard, int numMachines, Machine[] machine) {
 		for (int j = 1; j <= numTasks; j++) {// get tasks for job i
-            int theMachine = keyboard.readInteger();
+            int machineID = keyboard.readInteger();
             int theTaskTime = keyboard.readInteger();
-            if (theMachine < 1 || theMachine > numMachines
+            if (machineID < 1 || machineID > numMachines
                     || theTaskTime < 1)
                 throw new MyInputException("bad machine number or task time");
             if (j == 1)
-            	machine[theMachine].getJobQ().put(this);
-            this.addTask(theMachine, theTaskTime); // add to
+            	machine[machineID].getJobQ().put(this);
+            this.addTask(machineID, theTaskTime); // add to
         }
 	}
 }
