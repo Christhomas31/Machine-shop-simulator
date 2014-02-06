@@ -40,7 +40,7 @@ public class MachineShopSimulator {
             theJob.setArrivalTime(timeNow);
             // if p idle, schedule immediately
             if (machineArray[machineID].isIdle()) {// machine is idle
-                changeState(machineID);
+                machineArray[machineID].changeState(timeNow);
             }
             return true;
         }
@@ -51,35 +51,6 @@ public class MachineShopSimulator {
      * 
      * @return last job run on this machine
      */
-    static Job changeState(int machineID) {// Task on theMachine has finished,
-                                     // schedule next one.
-        Job lastJob;
-        if (machineArray[machineID].getActiveJob() == null) {// in idle or change-over
-                                                    // state
-            lastJob = null;
-            // wait over, ready for new job
-            if (machineArray[machineID].getJobQ().isEmpty()) // no waiting job
-                machineArray[machineID].setFinishTime();
-            else {// take job off the queue and work on it
-                machineArray[machineID].setActiveJob( (Job) machineArray[machineID].getJobQ()
-                        .remove());
-                machineArray[machineID].increaseTotalWait(timeNow
-                        - machineArray[machineID].getActiveJob().getArrivalTime());
-                machineArray[machineID].incrementNumTasks();
-                int t = machineArray[machineID].getActiveJob().removeNextTask();
-                machineArray[machineID].setFinishTime(timeNow + t);
-            }
-        } else {// task has just finished on machine[theMachine]
-                // schedule change-over time
-            lastJob = machineArray[machineID].getActiveJob();
-            machineArray[machineID].setActiveJob(null);
-            machineArray[machineID].setFinishTime(timeNow
-                    + machineArray[machineID].getChangeTime());
-        }
-
-        return lastJob;
-    }
-    
     /** @return machine for next event */
     public static int nextEventMachine() {
         // find first machine to finish, this is the
@@ -127,7 +98,7 @@ public class MachineShopSimulator {
     /** load first jobs onto each machine */
     static void startShop() {
         for (int p = 1; p <= numMachines; p++)
-            changeState(p);
+            machineArray[p].changeState(timeNow);
     }
     /** process all jobs to completion */
     static void simulate() {
@@ -135,7 +106,7 @@ public class MachineShopSimulator {
             int nextToFinish = nextEventMachine();
             timeNow = machineArray[nextToFinish].getTimeTaken();
             // change job on machine nextToFinish
-            Job theJob = changeState(nextToFinish);
+            Job theJob = machineArray[nextToFinish].changeState(timeNow);
             // move theJob to its next machine
             // decrement numJobs if theJob has finished
             if (theJob != null && !moveToNextMachine(theJob))

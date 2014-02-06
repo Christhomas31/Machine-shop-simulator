@@ -26,14 +26,6 @@ public class Machine {
 		return jobQ;
 	}
 
-	public Job getActiveJob(){
-		return activeJob;
-	}
-
-	public void setActiveJob(Job newJob){
-		activeJob = newJob;
-	}
-
 	public void incrementNumTasks(){
 		numTasks++;
 	}
@@ -51,23 +43,40 @@ public class Machine {
 		System.out.println();
 	}
 
-	public int getChangeTime(){
-		return changeTime;
-	}
-
 	public int getTimeTaken() {
 		return timeTaken;
 	}
-	
-	public void setFinishTime() {
-        timeTaken = largeTime;
-    }
-    
-    public void setFinishTime(int time) {
-        timeTaken = time;
-    }
-    
-    public boolean isIdle() {
+
+	public void setFinishTime(int time) {
+		timeTaken = time;
+	}
+
+	public boolean isIdle() {
 		return timeTaken == largeTime;
+	}
+	public Job changeState(int timeNow) {// Task on theMachine has finished,
+		// schedule next one.
+		Job lastJob;
+		if (activeJob == null) {// in idle or change-over
+			// state
+			lastJob = null;
+			// wait over, ready for new job
+			if (jobQ.isEmpty()) // no waiting job
+				timeTaken = largeTime;
+			else {// take job off the queue and work on it
+				activeJob = (Job) jobQ.remove();
+				increaseTotalWait(timeNow - activeJob.getArrivalTime());
+				incrementNumTasks();
+				int timeOfTask = activeJob.removeNextTask();
+				setFinishTime(timeNow + timeOfTask);
+			}
+		} else {// task has just finished on machine[theMachine]
+			// schedule change-over time
+			lastJob = activeJob;
+			activeJob = null;
+			setFinishTime(timeNow + changeTime);
+		}
+
+		return lastJob;
 	}
 }
