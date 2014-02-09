@@ -11,11 +11,14 @@ public class Machine {
 	private int totalWait; // total delay at this machine
 	private int numTasks; // number of tasks processed on this machine
 	private Job activeJob; // job currently active on this machine
+	private Job lastJob;
 	private int timeTaken; // replacing finish time
+	private int machineID;
 
 	// constructor
-	public Machine(int tempChange) {
+	public Machine(int ID, int tempChange) {
 		timeTaken = largeTime;
+		machineID = ID;
 		jobQ = new LinkedQueue();
 		if (tempChange < 0)
 			throw new MyInputException("change-over time must be >= 0");
@@ -35,8 +38,8 @@ public class Machine {
 		totalWait += increase;
 	}
 
-	public void printResults(int count){
-		System.out.println("Machine " + count + " completed "
+	public void printResults(){
+		System.out.println("Machine " + machineID + " completed "
 				+ numTasks + " tasks");
 		System.out.println("The total wait time was "
 				+ totalWait);
@@ -54,22 +57,24 @@ public class Machine {
 	public boolean isIdle() {
 		return timeTaken == largeTime;
 	}
+	
+	public void processJobQ(int timeNow){
+		if (jobQ.isEmpty()) // no waiting job
+			timeTaken = largeTime;
+		else {// take job off the queue and work on it
+			activeJob = (Job) jobQ.remove();
+			increaseTotalWait(timeNow - activeJob.getArrivalTime());
+			incrementNumTasks();
+			int timeOfTask = activeJob.removeNextTask();
+			setFinishTime(timeNow + timeOfTask);
+			
+		}
+	}
 	public Job changeState(int timeNow) {// Task on theMachine has finished,
 		// schedule next one.
-		Job lastJob;
 		if (activeJob == null) {// in idle or change-over
-			// state
 			lastJob = null;
-			// wait over, ready for new job
-			if (jobQ.isEmpty()) // no waiting job
-				timeTaken = largeTime;
-			else {// take job off the queue and work on it
-				activeJob = (Job) jobQ.remove();
-				increaseTotalWait(timeNow - activeJob.getArrivalTime());
-				incrementNumTasks();
-				int timeOfTask = activeJob.removeNextTask();
-				setFinishTime(timeNow + timeOfTask);
-			}
+			processJobQ(timeNow);
 		} else {// task has just finished on machine[theMachine]
 			// schedule change-over time
 			lastJob = activeJob;

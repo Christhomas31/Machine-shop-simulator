@@ -12,37 +12,20 @@ public class MachineShopSimulator {
     public static final String EACH_JOB_MUST_HAVE_AT_LEAST_1_TASK = "each job must have >= 1 task";
     public static final String BAD_MACHINE_NUMBER_OR_TASK_TIME = "bad machine number or task time";
     
-    // top-level nested classes
+    private static int timeNow; 
+    private static int numMachines; 
+    private static int numJobs;
+    private static Machine[] machineArray;
     
-    // data members of MachineShopSimulator
-    private static int timeNow; // current time
-    private static int numMachines; // number of machines
-    private static int numJobs; // number of jobs
-    private static Machine[] machineArray; // array of machines
-
-    // methods
-    /**
-     * move theJob to machine for its next task
-     * 
-     * @return false iff no next task
-     */
-    static boolean moveToNextMachine(Job theJob) {
-        LinkedQueue taskQueue = theJob.getTaskQ();
-    	if (taskQueue.isEmpty()) {// no next task
-            System.out.println("Job " + theJob.getId() + " has completed at "
-                    + timeNow + " Total wait was " + (timeNow - theJob.getLength()));
-            return false;
-        } else {// theJob has a next task
-                // get machine for next task
-            int machineID = ((Task) taskQueue.getFrontElement()).getMachine();
-            // put on machine p's wait queue
-            machineArray[machineID].getJobQ().put(theJob);
-            theJob.setArrivalTime(timeNow);
-            // if p idle, schedule immediately
-            if (machineArray[machineID].isIdle()) {// machine is idle
-                machineArray[machineID].changeState(timeNow);
-            }
-            return true;
+    static void moveToNextMachine(Job job){
+    	LinkedQueue taskQueue = job.getTaskQ();
+    	int machineID = ((Task) taskQueue.getFrontElement()).getMachine();
+        // put on machine p's wait queue
+        machineArray[machineID].getJobQ().put(job);
+        job.setArrivalTime(timeNow);
+        // if idle, schedule immediately
+        if (machineArray[machineID].isIdle()) {// machine is idle
+            machineArray[machineID].processJobQ(timeNow);
         }
     }
 
@@ -82,7 +65,7 @@ public class MachineShopSimulator {
         
         System.out.println("Enter change-over times for machines");
         for (int i = 1; i <= numMachines; i++){
-            machineArray[i] = new Machine(keyboard.readInteger());
+            machineArray[i] = new Machine(i, keyboard.readInteger());
         }
        
         // input the jobs
@@ -98,7 +81,7 @@ public class MachineShopSimulator {
     /** load first jobs onto each machine */
     static void startShop() {
         for (int p = 1; p <= numMachines; p++)
-            machineArray[p].changeState(timeNow);
+            machineArray[p].processJobQ(timeNow);
     }
     /** process all jobs to completion */
     static void simulate() {
@@ -109,8 +92,15 @@ public class MachineShopSimulator {
             Job theJob = machineArray[nextToFinish].changeState(timeNow);
             // move theJob to its next machine
             // decrement numJobs if theJob has finished
-            if (theJob != null && !moveToNextMachine(theJob))
+            if (theJob != null){
+            	if(theJob.getTaskQ().isEmpty()){
+            	System.out.println("Job " + theJob.getId() + " has completed at "
+                        + timeNow + " Total wait was " + (timeNow - theJob.getLength()));
                 numJobs--;
+            	} else {
+                	moveToNextMachine(theJob);
+                }
+            } 
         }
     }
 
@@ -118,7 +108,7 @@ public class MachineShopSimulator {
     static void outputStatistics() {
         System.out.println("Finish time = " + timeNow);
         for (int p = 1; p <= numMachines; p++) {
-        	machineArray[p].printResults(p);
+        	machineArray[p].printResults();
         }
     }
 
