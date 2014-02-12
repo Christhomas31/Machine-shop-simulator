@@ -25,17 +25,8 @@ public class Machine {
 		changeTime = tempChange;
 	}
 
-	public LinkedQueue getJobQ(){
-		return jobQ;
-	}
-
-	public void incrementNumTasks(){
-		numTasks++;
-	}
-
-
-	public void increaseTotalWait(int increase){
-		totalWait += increase;
+	public void addJob(Job job){
+		jobQ.put(job);
 	}
 
 	public void printResults(){
@@ -50,10 +41,6 @@ public class Machine {
 		return timeTaken;
 	}
 
-	public void setFinishTime(int time) {
-		timeTaken = time;
-	}
-
 	public boolean isIdle() {
 		return timeTaken == largeTime;
 	}
@@ -63,10 +50,10 @@ public class Machine {
 			timeTaken = largeTime;
 		else {// take job off the queue and work on it
 			activeJob = (Job) jobQ.remove();
-			increaseTotalWait(timeNow - activeJob.getArrivalTime());
-			incrementNumTasks();
+			totalWait += timeNow - activeJob.getArrivalTime();
+			numTasks++;
 			int timeOfTask = activeJob.removeNextTask();
-			setFinishTime(timeNow + timeOfTask);
+			timeTaken = timeNow + timeOfTask;
 			
 		}
 	}
@@ -79,7 +66,7 @@ public class Machine {
 			// schedule change-over time
 			lastJob = activeJob;
 			activeJob = null;
-			setFinishTime(timeNow + changeTime);
+			timeTaken = timeNow + changeTime;
 		}
 
 		return lastJob;

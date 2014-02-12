@@ -28,10 +28,6 @@ public class Job {
             throw new MyInputException(MachineShopSimulator.EACH_JOB_MUST_HAVE_AT_LEAST_1_TASK);
     }
     // other methods
-    public void addTask(int theMachine, int theTime) {
-        taskQ.put(new Task(theMachine, theTime));
-    }
-
     /**
      * remove next task of job and return its time also update length
      */
@@ -41,23 +37,22 @@ public class Job {
         return theTime;
     }
     
-    public LinkedQueue getTaskQ(){
-    	return taskQ;
+    public boolean isTaskQEmpty(){
+    	return taskQ.isEmpty();     
     }
     
-    public int getLength(){
-    	return length;
+    public int getNextMachine(int timeNow){
+		arrivalTime = timeNow;
+    	return ((Task) taskQ.getFrontElement()).getMachine();
+    }
+    
+    public void printJobStats(int timeNow){
+    	System.out.println("Job " + id + " has completed at "
+				+ timeNow + " Total wait was " + (timeNow - length));
     }
     
     public int getArrivalTime(){
     	return arrivalTime;
-    }
-    public void setArrivalTime(int time){
-    	arrivalTime = time;
-    }
-    
-    public int getId(){
-    	return id;
     }
 
 	public void setTasks(MyInputStream keyboard, int numMachines, Machine[] machine) {
@@ -68,8 +63,8 @@ public class Job {
                     || theTaskTime < 1)
                 throw new MyInputException("bad machine number or task time");
             if (j == 1)
-            	machine[machineID].getJobQ().put(this);
-            this.addTask(machineID, theTaskTime); // add to
+            	machine[machineID].addJob(this);
+            taskQ.put(new Task(machineID, theTaskTime)); // add to
         }
 	}
 }
